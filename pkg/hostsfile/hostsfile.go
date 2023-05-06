@@ -107,7 +107,7 @@ func (h *Hostsfile) monitorHostEntries(t time.Duration) {
 	}
 
 	for _ = range time.Tick(t) {
-		//log.Printf("go-dnsmasq: checking %q for updates…", hf.path)
+		// log.Debugf("🎇go-dnsmasq: checking %q for updates…", hf.path)
 
 		mtime, size, err := hostsFileMetadata(hf.path)
 		if err != nil {
@@ -123,7 +123,7 @@ func (h *Hostsfile) monitorHostEntries(t time.Duration) {
 			log.Errorf("Error parsing hostsfile: %s", err)
 		}
 
-		log.Debug("Reloaded updated hostsfile")
+		log.Infof("🍺🍺🍺Reloaded updated hostsfile, mtime:%s", mtime.Local().Format(time.RFC3339))
 
 		h.hostMutex.Lock()
 		h.file.mtime = mtime
