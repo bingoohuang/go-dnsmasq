@@ -6,13 +6,13 @@ package server
 
 import (
 	"fmt"
+	"log"
 	"net"
 	"strconv"
 	"strings"
 	"time"
 
 	"github.com/miekg/dns"
-	"github.com/soulteary/go-dnsmasq/pkg/log"
 )
 
 // Config provides options to the go-dnsmasq resolver
@@ -73,7 +73,7 @@ func ResolvConf(config *Config, forceNdots bool) error {
 	}
 
 	if !forceNdots && resolvConf.Ndots != 1 {
-		log.Debugf("Setting ndots from resolv.conf: %d", resolvConf.Ndots)
+		log.Printf("D! Setting ndots from resolv.conf: %d", resolvConf.Ndots)
 		config.Ndots = resolvConf.Ndots
 	}
 
@@ -97,7 +97,7 @@ func CheckConfig(config *Config) error {
 
 	if config.EnableSearch && len(config.SearchDomains) == 0 {
 		config.EnableSearch = false
-		log.Errorf("No search domains configured, disabling search.")
+		log.Printf("E! No search domains configured, disabling search.")
 	}
 	if config.RCache < 0 {
 		return fmt.Errorf("'rcache' must be equal or greater than 0")

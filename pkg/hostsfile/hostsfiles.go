@@ -3,6 +3,7 @@ package hosts
 import (
 	"errors"
 	"io/ioutil"
+	"log"
 	"net"
 	"os"
 	"strings"
@@ -10,10 +11,8 @@ import (
 	"time"
 
 	"github.com/miekg/dns"
-	"github.com/soulteary/go-dnsmasq/pkg/log"
 )
 
-//
 type fileInfo struct {
 	mtime time.Time
 	size  int64
@@ -45,7 +44,7 @@ func NewHostsfiles(directory string, config *Config) (*Hostsfiles, error) {
 }
 
 func (h *Hostsfiles) reloadAll() error {
-	files, err := ioutil.ReadDir(h.directory)
+	files, err := os.ReadDir(h.directory)
 	if err != nil {
 		return err
 	}
@@ -61,7 +60,8 @@ func (h *Hostsfiles) reloadAll() error {
 				updateHostList.add(host)
 			}
 		}
-		h.files[file.Name()] = &fileInfo{size: file.Size(), mtime: file.ModTime()}
+		info, _ := file.Info()
+		h.files[file.Name()] = &fileInfo{size: info.Size(), mtime: info.ModTime()}
 	}
 	h.hosts = updateHostList
 	return nil
@@ -103,24 +103,25 @@ func (h *Hostsfiles) monitorHostFiles(poll time.Duration) {
 
 	t := time.Duration(poll) * time.Second
 	for _ = range time.Tick(t) {
-		files, err := ioutil.ReadDir(h.directory)
+		files, err := os.ReadDir(h.directory)
 		if err != nil {
-			log.Error(err)
+			log.Printf("E! %v", err)
 			if os.IsNotExist(err) {
 				return
 			}
 			continue
 		}
 		for _, file := range files {
-			size, mtime := file.Size(), file.ModTime()
-			log.Debugf("checking on: %s", file.Name())
+			info, _ := file.Info()
+			size, mtime := info.Size(), info.ModTime()
+			log.Printf("D! checking on: %s", file.Name())
 			if lastStat, ok := h.files[file.Name()]; ok {
 				if lastStat.mtime.Equal(mtime) && lastStat.size == size {
 					continue // no updates
 				}
 			}
 			//If any of the file change, reload them all
-			log.Infof("Reloaded updated hostsfile, mtime:%s", mtime.Local().Format(time.RFC3339))
+			log.Printf("Reloaded updated hostsfile, mtime:%s", mtime.Local().Format(time.RFC3339))
 			h.hostMutex.Lock()
 			h.reloadAll()
 			h.hostMutex.Unlock()

@@ -10,14 +10,7 @@ import (
 
 	"github.com/soulteary/go-dnsmasq/pkg/cache"
 	hosts "github.com/soulteary/go-dnsmasq/pkg/hostsfile"
-	"github.com/soulteary/go-dnsmasq/pkg/log"
 )
-
-func init() {
-	if err := log.New("info"); err != nil {
-		log.Fatal("fail to init logger: ", err)
-	}
-}
 
 func TestPluggable(t *testing.T) {
 	tests := []struct {
@@ -41,8 +34,8 @@ func TestPluggable(t *testing.T) {
 			wantAnswer: "tomoyamachi.com	10	IN	A	1.1.1.1",
 		},
 		{
-			name:     "no pluggable func, load from hostfile",
-			question: "tomoyamachi.com",
+			name:       "no pluggable func, load from hostfile",
+			question:   "tomoyamachi.com",
 			wantAnswer: "tomoyamachi.com	10	IN	A	111.11.11.11",
 		},
 	}

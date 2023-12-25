@@ -9,12 +9,11 @@ package resolvconf
 
 import (
 	"fmt"
-	"io/ioutil"
+	"io"
+	"log"
 	"os"
 	"regexp"
 	"strings"
-
-	"github.com/soulteary/go-dnsmasq/pkg/log"
 )
 
 const RESOLVCONF_COMMENT_ADD = "# added by go-dnsmasq"
@@ -24,7 +23,7 @@ const RESOLVCONF_PATH = "/etc/resolv.conf"
 var resolvConfPattern = regexp.MustCompile("(?m:^.*" + regexp.QuoteMeta(RESOLVCONF_COMMENT_ADD) + ")(?:$|\n)")
 
 func StoreAddress(address string) error {
-	log.Infof("Setting host nameserver to %s", address)
+	log.Printf("Setting host nameserver to %s", address)
 	resolveConfEntry := fmt.Sprintf("nameserver %s %s\n", address, RESOLVCONF_COMMENT_ADD)
 	return updateResolvConf(resolveConfEntry, RESOLVCONF_PATH)
 }
@@ -40,14 +39,14 @@ func updateResolvConf(insert, path string) error {
 	}
 	defer f.Close()
 
-	orig, err := ioutil.ReadAll(f)
+	orig, err := io.ReadAll(f)
 	if err != nil {
 		return err
 	}
 
 	orig = resolvConfPattern.ReplaceAllLiteral(orig, []byte{})
 
-	if _, err = f.Seek(0, os.SEEK_SET); err != nil {
+	if _, err = f.Seek(0, io.SeekStart); err != nil {
 		return err
 	}
 

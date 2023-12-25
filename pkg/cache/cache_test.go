@@ -11,7 +11,7 @@ import (
 	"github.com/miekg/dns"
 )
 
-const testTTL = 2
+const testTTL = 2 * time.Millisecond
 
 type testcase struct {
 	m           *dns.Msg
@@ -76,10 +76,8 @@ func TestExpireMessage(t *testing.T) {
 	time.Sleep(testTTL)
 
 	m1 = c.Hit(tc.m.Question[0], tc.dnssec, tc.tcp, tc.m.Id)
-	if m1.Question[0].Qtype != tc.m.Question[0].Qtype {
-		t.Fatalf("bad Qtype, expected %d, got %d:", tc.m.Question[0].Qtype, m1.Question[0].Qtype)
+	if m1 != nil {
+		t.Fatalf("bad Qtype, expected nil, got %d:", m1.Question[0].Qtype)
 	}
-	if m1.Question[0].Name != tc.m.Question[0].Name {
-		t.Fatalf("bad Qtype, expected %s, got %s:", tc.m.Question[0].Name, m1.Question[0].Name)
-	}
+
 }

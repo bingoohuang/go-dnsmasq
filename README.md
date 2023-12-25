@@ -179,6 +179,7 @@ echo "set backupcopy=yes" >> ~/.vimrc
 ```
 
 #### Serving A/AAAA records from a hosts file
+
 The `--hostsfile` parameter expects a standard plain text [hosts file](https://en.wikipedia.org/wiki/Hosts_(file)) with the only difference being that a wildcard `*` in the left-most label of hostnames is allowed. Wildcard entries will match any subdomain that is not explicitly defined.
 For example, given a hosts file with the following content:
 

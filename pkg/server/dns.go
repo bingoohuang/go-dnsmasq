@@ -1,30 +1,30 @@
 package server
 
 import (
+	"log"
 	"strings"
 	"time"
 
 	"github.com/miekg/dns"
 
 	"github.com/soulteary/go-dnsmasq/pkg/cache"
-	"github.com/soulteary/go-dnsmasq/pkg/log"
 )
 
 func (s *Server) ServeDNS(w dns.ResponseWriter, req *dns.Msg) {
 	startTime := time.Now()
 	defer func() {
 		elapsed := time.Since(startTime)
-		log.Debugf("[%d] Response time: %s", req.Id, elapsed)
+		log.Printf("D! [%d] Response time: %s", req.Id, elapsed)
 	}()
 
 	tcp, dnssec, bufsize, m, err := s.serveDNS(w, req)
 	if err != nil {
-		log.Errorf("Failed to return reply %q", err)
+		log.Printf("E! Failed to return reply %q", err)
 	}
 
 	if m.Rcode == dns.RcodeServerFailure {
 		if err := w.WriteMsg(m); err != nil {
-			log.Errorf("Failed to return reply %q", err)
+			log.Printf("E! Failed to return reply %q", err)
 		}
 		return
 	}
@@ -42,7 +42,7 @@ func (s *Server) ServeDNS(w dns.ResponseWriter, req *dns.Msg) {
 	s.rcache.InsertMessage(cache.Key(req.Question[0], dnssec, tcp), m)
 
 	if err := w.WriteMsg(m); err != nil {
-		log.Errorf("Failed to return reply %q", err)
+		log.Printf("E! Failed to return reply %q", err)
 	}
 }
 
@@ -77,14 +77,14 @@ func (s *Server) serveDNS(w dns.ResponseWriter, req *dns.Msg) (tcp, dnssec bool,
 		StatsDnssecOkCount.Inc(1)
 	}
 
-	log.Debugf("[%d] Got query for '%s %s' from %s", req.Id, dns.TypeToString[q.Qtype], q.Name, w.RemoteAddr().String())
+	log.Printf("D! [%d] Got query for '%s %s' from %s", req.Id, dns.TypeToString[q.Qtype], q.Name, w.RemoteAddr().String())
 
 	if s.pluggableFunc != nil {
 		dfMessage, err := (*s.pluggableFunc)(m, q, name, tcp)
 		if err != nil {
 			msgFail := new(dns.Msg)
 			s.ServerFailure(msgFail, req)
-			log.Errorf("PluggableFunc: %s", name)
+			log.Printf("E! PluggableFunc: %s", name)
 			return tcp, dnssec, bufsize, msgFail, nil
 		}
 		if dfMessage != nil {
@@ -94,7 +94,7 @@ func (s *Server) serveDNS(w dns.ResponseWriter, req *dns.Msg) (tcp, dnssec bool,
 
 	// Check cache first.
 	if m1 := s.rcache.Hit(q, dnssec, tcp, m.Id); m1 != nil {
-		log.Debugf("[%d] Found cached response for this query", req.Id)
+		log.Printf("D! [%d] Found cached response for this query", req.Id)
 		if tcp {
 			if _, overflow := Fit(m1, dns.MaxMsgSize, tcp); overflow {
 				msgFail := new(dns.Msg)
@@ -118,10 +118,10 @@ func (s *Server) serveDNS(w dns.ResponseWriter, req *dns.Msg) (tcp, dnssec bool,
 	if q.Qtype == dns.TypeA || q.Qtype == dns.TypeAAAA || q.Qtype == dns.TypeANY {
 		records, err := s.AddressRecords(q, name)
 		if err != nil {
-			log.Errorf("Error looking up hostsfile records: %s", err)
+			log.Printf("E! Error looking up hostsfile records: %s", err)
 		}
 		if len(records) > 0 {
-			log.Debugf("[%d] Found name in hostsfile records", req.Id)
+			log.Printf("D! [%d] Found name in hostsfile records", req.Id)
 			m.Answer = append(m.Answer, records...)
 			return tcp, dnssec, bufsize, m, nil
 		}

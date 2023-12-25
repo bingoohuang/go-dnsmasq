@@ -77,7 +77,7 @@ func (c *Cache) InsertMessage(s string, msg *dns.Msg) {
 
 	c.Lock()
 	if _, ok := c.m[s]; !ok {
-		c.m[s] = &elem{time.Now().UTC().Add(c.ttl), msg.Copy()}
+		c.m[s] = &elem{time.Now().Add(c.ttl), msg.Copy()}
 
 	}
 	c.EvictRandom()

@@ -3,14 +3,13 @@ package server
 import (
 	"context"
 	"fmt"
+	"log"
 	"net"
 
 	"github.com/coreos/go-systemd/activation"
 	"github.com/miekg/dns"
-	"golang.org/x/sync/errgroup"
-
 	"github.com/soulteary/go-dnsmasq/pkg/cache"
-	"github.com/soulteary/go-dnsmasq/pkg/log"
+	"golang.org/x/sync/errgroup"
 )
 
 type PluggableFunc func(m *dns.Msg, q dns.Question, targetName string, isTCP bool) (*dns.Msg, error)
@@ -51,7 +50,7 @@ func (s *Server) Run(ctx context.Context) error {
 	if s.config.Systemd {
 		return s.runSystemd(ctx, mux)
 	}
-	log.Debug("start as proccess")
+	log.Printf("D! start as proccess")
 	return s.runProccess(ctx, mux)
 }
 
@@ -137,7 +136,7 @@ func (s *Server) dnsReadyMsg(addr, net string) {
 	if s.config.RCache > 0 {
 		rCacheState = fmt.Sprintf("capacity: %d", s.config.RCache)
 	}
-	log.Infof("Ready for queries on %s://%s [cache: %s]", net, addr, rCacheState)
+	log.Printf("Ready for queries on %s://%s [cache: %s]", net, addr, rCacheState)
 }
 
 // isTCP returns true if the client is connecting over TCP.

@@ -6,14 +6,13 @@ package main
 
 import (
 	"fmt"
-	nativelog "log"
+	"log"
 	"os"
 	"time"
 
 	"github.com/urfave/cli"
 
 	"github.com/soulteary/go-dnsmasq/pkg"
-	"github.com/soulteary/go-dnsmasq/pkg/log"
 	"github.com/soulteary/go-dnsmasq/pkg/resolvconf"
 	"github.com/soulteary/go-dnsmasq/pkg/server"
 	"github.com/soulteary/go-dnsmasq/pkg/types"
@@ -125,10 +124,7 @@ func main() {
 	}
 
 	app.Action = func(c *cli.Context) error {
-		if err := log.New(c.String("log-level")); err != nil {
-			nativelog.Fatal(err)
-		}
-		log.Infof("Starting go-dnsmasq server %s", Version)
+		log.Printf("Starting go-dnsmasq server %s", Version)
 
 		nameservers, err := server.CreateNameservers(c.StringSlice("nameservers"))
 		if err != nil {
@@ -151,24 +147,24 @@ func main() {
 		}
 
 		config := &server.Config{
-			DnsAddr:         listen,
-			DefaultResolver: c.Bool("default-resolver"),
-			Nameservers:     nameservers,
-			Systemd:         c.Bool("systemd"),
-			SearchDomains:   searchDomains,
-			EnableSearch:    c.Bool("enable-search"),
-			Hostsfile:       c.String("hostsfile"),
+			DnsAddr:             listen,
+			DefaultResolver:     c.Bool("default-resolver"),
+			Nameservers:         nameservers,
+			Systemd:             c.Bool("systemd"),
+			SearchDomains:       searchDomains,
+			EnableSearch:        c.Bool("enable-search"),
+			Hostsfile:           c.String("hostsfile"),
 			DirectoryHostsfiles: c.String("hostsfiles"),
-			PollInterval:    c.Duration("hostsfile-poll"),
-			RoundRobin:      c.Bool("round-robin"),
-			NoRec:           c.Bool("no-rec"),
-			FwdNdots:        c.Int("fwd-ndots"),
-			Ndots:           c.Int("ndots"),
-			ReadTimeout:     2 * time.Second,
-			RCache:          c.Int("rcache"),
-			RCacheTtl:       c.Duration("rcache-ttl"),
-			Verbose:         c.Bool("verbose"),
-			Stub:            stubmap,
+			PollInterval:        c.Duration("hostsfile-poll"),
+			RoundRobin:          c.Bool("round-robin"),
+			NoRec:               c.Bool("no-rec"),
+			FwdNdots:            c.Int("fwd-ndots"),
+			Ndots:               c.Int("ndots"),
+			ReadTimeout:         2 * time.Second,
+			RCache:              c.Int("rcache"),
+			RCacheTtl:           c.Duration("rcache-ttl"),
+			Verbose:             c.Bool("verbose"),
+			Stub:                stubmap,
 		}
 
 		resolvconf.Clean()

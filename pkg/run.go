@@ -4,13 +4,13 @@ import (
 	"context"
 	"errors"
 	"fmt"
+	"log"
 	"net"
 	"os"
 	"os/signal"
 	"syscall"
 
 	hosts "github.com/soulteary/go-dnsmasq/pkg/hostsfile"
-	"github.com/soulteary/go-dnsmasq/pkg/log"
 	"github.com/soulteary/go-dnsmasq/pkg/resolvconf"
 	"github.com/soulteary/go-dnsmasq/pkg/server"
 	"github.com/soulteary/go-dnsmasq/pkg/stats"
@@ -27,9 +27,9 @@ func BuildServer(sconf *server.Config, f *server.PluggableFunc, version string) 
 		return nil, fmt.Errorf("check server config: %w", err)
 	}
 
-	log.Infof("Nameservers: %v", sconf.Nameservers)
+	log.Printf("Nameservers: %v", sconf.Nameservers)
 	if sconf.EnableSearch {
-		log.Infof("Search domains: %v", sconf.SearchDomains)
+		log.Printf("Search domains: %v", sconf.SearchDomains)
 	}
 
 	var hf *hosts.Hostsfile
@@ -38,7 +38,7 @@ func BuildServer(sconf *server.Config, f *server.PluggableFunc, version string) 
 		Poll:    sconf.PollInterval,
 		Verbose: sconf.Verbose,
 	}
-	
+
 	if sconf.DirectoryHostsfiles != "" {
 		if hfs, err = hosts.NewHostsfiles(sconf.DirectoryHostsfiles, hostfileConfig); err != nil {
 			return nil, fmt.Errorf("loading hostsfile: %w", err)
@@ -64,10 +64,10 @@ func BuildServer(sconf *server.Config, f *server.PluggableFunc, version string) 
 	}
 
 	if sconf.DirectoryHostsfiles != "" {
-		log.Debug("create server")
+		log.Printf("D! create server")
 		return server.New(hfs, sconf, version, f), nil
 	} else {
-		log.Debug("create server")
+		log.Printf("D! create server")
 		return server.New(hf, sconf, version, f), nil
 	}
 
@@ -75,7 +75,7 @@ func BuildServer(sconf *server.Config, f *server.PluggableFunc, version string) 
 
 func Run(s *server.Server) error {
 	defer func() {
-		log.Info("Restoring /etc/resolv.conf")
+		log.Printf("Restoring /etc/resolv.conf")
 		resolvconf.Clean()
 	}()
 
@@ -90,10 +90,10 @@ func Run(s *server.Server) error {
 
 		select {
 		case sig := <-signalChannel:
-			log.Debugf("Received signal: %s\n", sig)
+			log.Printf("D! Received signal: %s\n", sig)
 			done()
 		case <-gctx.Done():
-			log.Debugf("closing signal goroutine\n")
+			log.Printf("D! closing signal goroutine\n")
 			return gctx.Err()
 		}
 
@@ -108,7 +108,7 @@ func Run(s *server.Server) error {
 		go func() { errCh <- s.Run(gctx) }()
 		select {
 		case err := <-errCh:
-			log.Debug("error from errCh", err)
+			log.Printf("D! error from errCh: %v", err)
 			return err
 		case <-gctx.Done():
 			return gctx.Err()
@@ -117,10 +117,10 @@ func Run(s *server.Server) error {
 
 	if err := eg.Wait(); err != nil {
 		if errors.Is(err, context.Canceled) {
-			log.Info("context was canceled")
+			log.Printf("context was canceled")
 			return nil
 		} else {
-			log.Error("error", err)
+			log.Printf("E! error: %v", err)
 			return err
 		}
 	}
