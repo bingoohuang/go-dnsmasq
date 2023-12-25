@@ -67,13 +67,13 @@ func main() {
 }
 ```
 
-### Application examples:
+## Application examples:
 
 - Caching DNS server/forwarder in a local network
 - Container/Host DNS cache
 - DNS proxy providing DNS `search` capabilities to `musl-libc` based clients, particularly Alpine Linux
 
-### Features
+## Features
 
 * Automatically set upstream `nameservers` and `search` domains from resolv.conf
 * Insert itself into the host's /etc/resolv.conf on start
@@ -86,7 +86,7 @@ func main() {
 * Send server metrics to Graphite and StatHat
 * Configuration through both command line flags and environment variables
 
-### Resolve logic
+## Resolve logic
 
 DNS queries are resolved in the style of the GNU libc resolver:
 * The first nameserver (as listed in resolv.conf or configured by `--nameservers`) is always queried first, additional servers are considered fallbacks
@@ -94,7 +94,7 @@ DNS queries are resolved in the style of the GNU libc resolver:
 * Single-label queries (e.g.: "redis-service") are always qualified with the `search` domains
 * Multi-label queries (ndots >= 1) are first tried as absolute names before qualifying them with the `search` domains
 
-### Command-line options / environment variables
+## Command-line options / environment variables
 
 | Flag                           | Description                                                                   | Default       | Environment vars     |
 | ------------------------------ | ----------------------------------------------------------------------------- | ------------- | -------------------- |
@@ -117,7 +117,7 @@ DNS queries are resolved in the style of the GNU libc resolver:
 | --help, -h                     | Show help                                                                     |               |                      |
 | --version, -v                  | Print the version                                                             |               |                      |
 
-#### Enable Graphite/StatHat metrics
+## Enable Graphite/StatHat metrics
 
 EnvVar: **GRAPHITE_SERVER**  
 Default: ` `  
@@ -131,19 +131,19 @@ EnvVar: **STATHAT_USER**
 Default: ` `  
 Set to your StatHat account email address
 
-### Usage
+## Usage
 
-#### Run from the command line
+### Run from the command line
 
 Download the binary for your OS from the [releases page](https://github.com/soulteary/go-dnsmasq/releases/latest).    
 
 go-dnsmasq is available in two versions. The minimal version (`go-dnsmasq-min`) has a lower memory footprint but doesn't have caching, stats reporting and systemd support.
 
 ```sh
-   sudo ./go-dnsmasq [options]
+sudo ./go-dnsmasq [options]
 ```
 
-#### Run as a Docker container
+### Run as a Docker container
 
 Docker Hub trusted builds are [available](https://hub.docker.com/r/soulteary/go-dnsmasq/).
 
@@ -153,7 +153,7 @@ docker run -d -p 53:53/udp -p 53:53 soulteary/go-dnsmasq
 
 You can pass go-dnsmasq configuration parameters by setting the corresponding environmental variables with Docker's `-e` flag.
 
-#### Run as a Docker container with docker-compose
+### Run as a Docker container with docker-compose
 
 Docker Hub trusted builds are [available](https://hub.docker.com/r/soulteary/go-dnsmasq/).
 
@@ -178,7 +178,7 @@ Tips: Please note that if you use **vim** to edit, it may cause inode changes du
 echo "set backupcopy=yes" >> ~/.vimrc
 ```
 
-#### Serving A/AAAA records from a hosts file
+### Serving A/AAAA records from a hosts file
 
 The `--hostsfile` parameter expects a standard plain text [hosts file](https://en.wikipedia.org/wiki/Hosts_(file)) with the only difference being that a wildcard `*` in the left-most label of hostnames is allowed. Wildcard entries will match any subdomain that is not explicitly defined.
 For example, given a hosts file with the following content:
@@ -189,3 +189,165 @@ For example, given a hosts file with the following content:
 ```
 
 Queries for `db2.db.local` would be answered with an A record pointing to 192.168.0.2, while queries for `db1.db.local` would yield an A record pointing to 192.168.0.1.
+
+
+### Demo1
+
+`dnsmasq -l 127.0.0.1:1053 -f testdata/hostsfile`
+
+```sh
+$ dig @127.0.0.1 -p 1053 db1.db.local
+
+; <<>> DiG 9.10.6 <<>> @127.0.0.1 -p 1053 db1.db.local
+; (1 server found)
+;; global options: +cmd
+;; Got answer:
+;; WARNING: .local is reserved for Multicast DNS
+;; You are currently testing what happens when an mDNS query is leaked to DNS
+;; ->>HEADER<<- opcode: QUERY, status: NOERROR, id: 29520
+;; flags: qr rd ra; QUERY: 1, ANSWER: 1, AUTHORITY: 0, ADDITIONAL: 0
+
+;; QUESTION SECTION:
+;db1.db.local.                  IN      A
+
+;; ANSWER SECTION:
+db1.db.local.           10      IN      A       192.168.0.1
+
+;; Query time: 3 msec
+;; SERVER: 127.0.0.1#1053(127.0.0.1)
+;; WHEN: Mon Dec 25 22:25:55 CST 2023
+;; MSG SIZE  rcvd: 46
+
+$ dig @127.0.0.1 -p 1053 db2.db.local
+
+; <<>> DiG 9.10.6 <<>> @127.0.0.1 -p 1053 db2.db.local
+; (1 server found)
+;; global options: +cmd
+;; Got answer:
+;; WARNING: .local is reserved for Multicast DNS
+;; You are currently testing what happens when an mDNS query is leaked to DNS
+;; ->>HEADER<<- opcode: QUERY, status: NOERROR, id: 59581
+;; flags: qr rd ra; QUERY: 1, ANSWER: 1, AUTHORITY: 0, ADDITIONAL: 0
+
+;; QUESTION SECTION:
+;db2.db.local.                  IN      A
+
+;; ANSWER SECTION:
+db2.db.local.           10      IN      A       192.168.0.2
+
+;; Query time: 0 msec
+;; SERVER: 127.0.0.1#1053(127.0.0.1)
+;; WHEN: Mon Dec 25 22:26:06 CST 2023
+;; MSG SIZE  rcvd: 46
+
+$ dig @127.0.0.1 -p 1053 www.baidu.com
+
+; <<>> DiG 9.10.6 <<>> @127.0.0.1 -p 1053 www.baidu.com
+; (1 server found)
+;; global options: +cmd
+;; Got answer:
+;; ->>HEADER<<- opcode: QUERY, status: NOERROR, id: 62839
+;; flags: qr rd ra; QUERY: 1, ANSWER: 3, AUTHORITY: 0, ADDITIONAL: 0
+
+;; QUESTION SECTION:
+;www.baidu.com.                 IN      A
+
+;; ANSWER SECTION:
+www.baidu.com.          889     IN      CNAME   www.a.shifen.com.
+www.a.shifen.com.       24      IN      A       153.3.238.110
+www.a.shifen.com.       24      IN      A       153.3.238.102
+
+;; Query time: 22 msec
+;; SERVER: 127.0.0.1#1053(127.0.0.1)
+;; WHEN: Mon Dec 25 22:26:11 CST 2023
+;; MSG SIZE  rcvd: 90
+```
+
+### Demo2
+
+`sudo dnsmasq -l 127.0.0.1:53 -f testdata/hostsfile -d`
+
+```sh
+$ cat /etc/resolv.conf
+nameserver 127.0.0.1 # added by go-dnsmasq
+#
+# macOS Notice
+#
+# This file is not consulted for DNS hostname resolution, address
+# resolution, or the DNS query routing mechanism used by most
+# processes on this system.
+#
+# To view the DNS configuration used by this system, use:
+#   scutil --dns
+#
+# SEE ALSO
+#   dns-sd(1), scutil(8)
+#
+# This file is automatically generated.
+#
+# disabled by go-dnsmasq # nameserver fe80::1%en0
+# disabled by go-dnsmasq # nameserver 192.168.1.1
+$ dig www.baidu.com   
+
+; <<>> DiG 9.10.6 <<>> www.baidu.com
+;; global options: +cmd
+;; Got answer:
+;; ->>HEADER<<- opcode: QUERY, status: NOERROR, id: 53442
+;; flags: qr rd ra; QUERY: 1, ANSWER: 3, AUTHORITY: 0, ADDITIONAL: 0
+
+;; QUESTION SECTION:
+;www.baidu.com.                 IN      A
+
+;; ANSWER SECTION:
+www.baidu.com.          946     IN      CNAME   www.a.shifen.com.
+www.a.shifen.com.       28      IN      A       153.3.238.102
+www.a.shifen.com.       28      IN      A       153.3.238.110
+
+;; Query time: 7 msec
+;; SERVER: 127.0.0.1#53(127.0.0.1)
+;; WHEN: Mon Dec 25 22:30:31 CST 2023
+;; MSG SIZE  rcvd: 90
+
+$ dig db2.db.local                     
+
+; <<>> DiG 9.10.6 <<>> db2.db.local
+;; global options: +cmd
+;; Got answer:
+;; WARNING: .local is reserved for Multicast DNS
+;; You are currently testing what happens when an mDNS query is leaked to DNS
+;; ->>HEADER<<- opcode: QUERY, status: NOERROR, id: 45297
+;; flags: qr rd ra; QUERY: 1, ANSWER: 1, AUTHORITY: 0, ADDITIONAL: 0
+
+;; QUESTION SECTION:
+;db2.db.local.                  IN      A
+
+;; ANSWER SECTION:
+db2.db.local.           10      IN      A       192.168.0.2
+
+;; Query time: 0 msec
+;; SERVER: 127.0.0.1#53(127.0.0.1)
+;; WHEN: Mon Dec 25 22:30:41 CST 2023
+;; MSG SIZE  rcvd: 46
+
+$ dig db1.db.local
+
+; <<>> DiG 9.10.6 <<>> db1.db.local
+;; global options: +cmd
+;; Got answer:
+;; WARNING: .local is reserved for Multicast DNS
+;; You are currently testing what happens when an mDNS query is leaked to DNS
+;; ->>HEADER<<- opcode: QUERY, status: NOERROR, id: 48004
+;; flags: qr rd ra; QUERY: 1, ANSWER: 1, AUTHORITY: 0, ADDITIONAL: 0
+
+;; QUESTION SECTION:
+;db1.db.local.                  IN      A
+
+;; ANSWER SECTION:
+db1.db.local.           10      IN      A       192.168.0.1
+
+;; Query time: 0 msec
+;; SERVER: 127.0.0.1#53(127.0.0.1)
+;; WHEN: Mon Dec 25 22:30:45 CST 2023
+;; MSG SIZE  rcvd: 46
+
+```
