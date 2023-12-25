@@ -54,7 +54,7 @@ func (h *hostname) Equal(hostnamev *hostname) bool {
 	return true
 }
 
-// return first match
+// FindHost return first match
 func (h *hostlist) FindHost(name string) (addr net.IP) {
 	var ips []net.IP
 	ips = h.FindHosts(name)
@@ -64,7 +64,7 @@ func (h *hostlist) FindHost(name string) (addr net.IP) {
 	return
 }
 
-// return exact matches, if existing -> else, return wildcard
+// FindHosts return exact matches, if existing -> else, return wildcard
 func (h *hostlist) FindHosts(name string) (addrs []net.IP) {
 	for _, hostname := range *h {
 		if hostname.wildcard == false && hostname.domain == name {
@@ -73,13 +73,13 @@ func (h *hostlist) FindHosts(name string) (addrs []net.IP) {
 	}
 
 	if len(addrs) == 0 {
-		var domain_match string
+		var domainMatch string
 		for _, hostname := range *h {
 			if hostname.wildcard == true && len(hostname.domain) < len(name) {
-				domain_match = strings.Join([]string{".", hostname.domain}, "")
-				if name[len(name)-len(domain_match):] == domain_match {
+				domainMatch = strings.Join([]string{".", hostname.domain}, "")
+				if name[len(name)-len(domainMatch):] == domainMatch {
 					var left string
-					left = name[0 : len(name)-len(domain_match)]
+					left = name[0 : len(name)-len(domainMatch)]
 					if !strings.Contains(left, ".") {
 						addrs = append(addrs, hostname.ip)
 					}
@@ -95,7 +95,7 @@ func (h *hostlist) add(hostnamev *hostname) error {
 	hostname := newHostname(hostnamev.domain, hostnamev.ip, hostnamev.ipv6, hostnamev.wildcard)
 	for _, found := range *h {
 		if found.Equal(hostname) {
-			return fmt.Errorf("Duplicate hostname entry for %#v", hostname)
+			return fmt.Errorf("duplicate hostname entry for %#v", hostname)
 		}
 	}
 	*h = append(*h, hostname)
@@ -171,7 +171,7 @@ func parseLine(line string) hostlist {
 	var isWildcard bool
 	for _, v := range domains {
 		isWildcard = false
-		if v[0:2] == "*." {
+		if len(v) > 1 && v[:2] == "*." {
 			v = v[2:]
 			isWildcard = true
 		}
