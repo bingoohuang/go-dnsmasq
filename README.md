@@ -349,3 +349,7 @@ db1.db.local.           10      IN      A       192.168.0.1
 ;; MSG SIZE  rcvd: 46
 
 ```
+
+## Resources
+
+- [sslip.io](https://github.com/cunnie/sslip.io) 是一个 DNS 服务器，它将特制的 DNS A 记录映射到 IP 地址（例如，“127-0-0-1.sslip.io”映射到 127.0.0.1）。它与 [xip.io](http://xip.io/. 相似，并受到其启发。
