@@ -14,7 +14,6 @@ import (
 	"github.com/soulteary/go-dnsmasq/pkg/resolvconf"
 	"github.com/soulteary/go-dnsmasq/pkg/server"
 	"github.com/soulteary/go-dnsmasq/pkg/stats"
-
 	"golang.org/x/sync/errgroup"
 )
 
@@ -70,7 +69,6 @@ func BuildServer(sconf *server.Config, f *server.PluggableFunc, version string) 
 		log.Printf("D! create server")
 		return server.New(hf, sconf, version, f), nil
 	}
-
 }
 
 func Run(s *server.Server) error {

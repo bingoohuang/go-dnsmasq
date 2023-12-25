@@ -17,33 +17,21 @@ import (
 
 // Config provides options to the go-dnsmasq resolver
 type Config struct {
+	// Stub zones support. Map contains domainname -> nameserver:port
+	Stub map[string][]string
 	// The ip:port go-dnsmasq should be listening on for incoming DNS requests.
 	DnsAddr string `json:"dns_addr,omitempty"`
-	// bind to port(s) activated by systemd. If set to true, this overrides DnsAddr.
-	Systemd bool `json:"systemd,omitempty"`
-	// Rewrite host's network config making go-dnsmasq the default resolver
-	DefaultResolver bool `json:"default_resolver,omitempty"`
-	// Search domains used to qualify queries
-	SearchDomains []string `json:"search_domains,omitempty"`
-	// Replicates GNU libc's use of /etc/resolv.conf search domains
-	EnableSearch bool `json:"append_domain,omitempty"`
 	// Path to the hostfile
 	Hostsfile string `json:"hostfile,omitempty"`
 	// Path to the directory of hostfiles
 	DirectoryHostsfiles string `json:"directory_hostsfiles,omitempty"`
-	// Hostfile Polling
-	PollInterval time.Duration `json:"poll_interval,omitempty"`
-	// Round robin A/AAAA replies. Default is true.
-	RoundRobin bool `json:"round_robin,omitempty"`
+	// Search domains used to qualify queries
+	SearchDomains []string `json:"search_domains,omitempty"`
 	// List of ip:port, seperated by commas of recursive nameservers to forward queries to.
 	Nameservers []string `json:"nameservers,omitempty"`
-	// Never provide a recursive service.
-	NoRec       bool          `json:"no_rec,omitempty"`
-	ReadTimeout time.Duration `json:"read_timeout,omitempty"`
-	// Default TTL, in seconds. Defaults to 360.
-	Ttl uint32 `json:"ttl,omitempty"`
-	// Default TTL for Hostfile records, in seconds. Defaults to 30.
-	HostsTtl uint32 `json:"hostfile_ttl,omitempty"`
+	// Hostfile Polling
+	PollInterval time.Duration `json:"poll_interval,omitempty"`
+	ReadTimeout  time.Duration `json:"read_timeout,omitempty"`
 	// RCache, capacity of response cache in resource records stored.
 	RCache int `json:"rcache,omitempty"`
 	// RCacheTtl, how long to cache in seconds.
@@ -53,10 +41,22 @@ type Config struct {
 	// How many dots a name must have before we do an initial absolute query. Defaults to 1.
 	Ndots int `json:"ndots,omitempty"`
 
-	Verbose bool `json:"-"`
+	// Default TTL, in seconds. Defaults to 360.
+	Ttl uint32 `json:"ttl,omitempty"`
+	// Default TTL for Hostfile records, in seconds. Defaults to 30.
+	HostsTtl uint32 `json:"hostfile_ttl,omitempty"`
+	// bind to port(s) activated by systemd. If set to true, this overrides DnsAddr.
+	Systemd bool `json:"systemd,omitempty"`
+	// Rewrite host's network config making go-dnsmasq the default resolver
+	DefaultResolver bool `json:"default_resolver,omitempty"`
+	// Replicates GNU libc's use of /etc/resolv.conf search domains
+	EnableSearch bool `json:"append_domain,omitempty"`
+	// Round robin A/AAAA replies. Default is true.
+	RoundRobin bool `json:"round_robin,omitempty"`
+	// Never provide a recursive service.
+	NoRec bool `json:"no_rec,omitempty"`
 
-	// Stub zones support. Map contains domainname -> nameserver:port
-	Stub map[string][]string
+	Verbose bool `json:"-"`
 }
 
 func ResolvConf(config *Config, forceNdots bool) error {

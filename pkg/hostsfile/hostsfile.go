@@ -6,9 +6,9 @@
 package hosts
 
 import (
-	"io/ioutil"
 	"log"
 	"net"
+	"os"
 	"strings"
 	"sync"
 	"time"
@@ -28,9 +28,9 @@ type Hostsfile struct {
 	config *Config
 	hosts  *hostlist
 	file   struct {
-		size  int64
-		path  string
 		mtime time.Time
+		path  string
+		size  int64
 	}
 	hostMutex sync.RWMutex
 }
@@ -83,7 +83,7 @@ func (h *Hostsfile) FindReverse(name string) (host string, err error) {
 }
 
 func (h *Hostsfile) loadHostEntries() error {
-	data, err := ioutil.ReadFile(h.file.path)
+	data, err := os.ReadFile(h.file.path)
 	if err != nil {
 		return err
 	}
@@ -101,8 +101,9 @@ func (h *Hostsfile) monitorHostEntries(t time.Duration) {
 	if hf.path == "" {
 		return
 	}
+	ticker := time.NewTicker(t)
 
-	for _ = range time.Tick(t) {
+	for range ticker.C {
 		// log.Debugf("🎇go-dnsmasq: checking %q for updates…", hf.path)
 
 		mtime, size, err := hostsFileMetadata(hf.path)

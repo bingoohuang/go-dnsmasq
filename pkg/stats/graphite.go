@@ -13,7 +13,6 @@ import (
 
 	metrics "github.com/rcrowley/go-metrics"
 	"github.com/rcrowley/go-metrics/stathat"
-
 	"github.com/soulteary/go-dnsmasq/pkg/server"
 )
 

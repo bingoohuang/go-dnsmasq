@@ -22,10 +22,12 @@ const ipv4Fail = `
 76.76.67.67.45
 `
 
-const domain = "localhost"
-const ip = "127.0.0.1"
-const ipv6 = false
-const wildcard = false
+const (
+	domain   = "localhost"
+	ip       = "127.0.0.1"
+	ipv6     = false
+	wildcard = false
+)
 
 func Diff(expected, actual string) string {
 	return fmt.Sprintf(`
@@ -75,7 +77,6 @@ func TestEquality(t *testing.T) {
 	if host1.Equal(host2) {
 		t.Error("Hosts are expected different, got: ", host1, host2)
 	}
-
 }
 
 func TestParseLine(t *testing.T) {

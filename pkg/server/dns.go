@@ -6,7 +6,6 @@ import (
 	"time"
 
 	"github.com/miekg/dns"
-
 	"github.com/soulteary/go-dnsmasq/pkg/cache"
 )
 

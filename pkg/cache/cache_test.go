@@ -79,5 +79,4 @@ func TestExpireMessage(t *testing.T) {
 	if m1 != nil {
 		t.Fatalf("bad Qtype, expected nil, got %d:", m1.Question[0].Qtype)
 	}
-
 }

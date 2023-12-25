@@ -12,18 +12,20 @@ import (
 	"golang.org/x/sync/errgroup"
 )
 
-type PluggableFunc func(m *dns.Msg, q dns.Question, targetName string, isTCP bool) (*dns.Msg, error)
-type Server struct {
-	hosts   Hostfile
-	config  *Config
-	version string
+type (
+	PluggableFunc func(m *dns.Msg, q dns.Question, targetName string, isTCP bool) (*dns.Msg, error)
+	Server        struct {
+		hosts  Hostfile
+		config *Config
 
-	pluggableFunc *PluggableFunc
+		pluggableFunc *PluggableFunc
 
-	dnsUDPclient *dns.Client // used for forwarding queries
-	dnsTCPclient *dns.Client // used for forwarding queries
-	rcache       *cache.Cache
-}
+		dnsUDPclient *dns.Client // used for forwarding queries
+		dnsTCPclient *dns.Client // used for forwarding queries
+		rcache       *cache.Cache
+		version      string
+	}
+)
 
 type Hostfile interface {
 	FindHosts(name string) ([]net.IP, error)

@@ -129,9 +129,9 @@ func parseLine(line string) hostlist {
 	line = strings.Split(line, "#")[0]
 
 	// Replace tabs and multispaces with single spaces throughout
-	line = strings.Replace(line, "\t", " ", -1)
+	line = strings.ReplaceAll(line, "\t", " ")
 	for strings.Contains(line, "  ") {
-		line = strings.Replace(line, "  ", " ", -1)
+		line = strings.ReplaceAll(line, "  ", " ")
 	}
 
 	line = strings.TrimSpace(line)

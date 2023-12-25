@@ -2,7 +2,6 @@ package hosts
 
 import (
 	"errors"
-	"io/ioutil"
 	"log"
 	"net"
 	"os"
@@ -22,8 +21,8 @@ type fileInfo struct {
 type Hostsfiles struct {
 	config    *Config
 	hosts     *hostlist
-	directory string
 	files     map[string]*fileInfo
+	directory string
 	hostMutex sync.RWMutex
 }
 
@@ -54,7 +53,7 @@ func (h *Hostsfiles) reloadAll() error {
 		if hosts, err = loadHostEntries(h.directory + "/" + file.Name()); err != nil {
 			return err
 		}
-		//Update main hostlist
+		// Update main hostlist
 		if hosts != nil {
 			for _, host := range *hosts {
 				updateHostList.add(host)
@@ -89,7 +88,7 @@ func (h *Hostsfiles) FindReverse(name string) (host string, err error) {
 }
 
 func loadHostEntries(path string) (*hostlist, error) {
-	data, err := ioutil.ReadFile(path)
+	data, err := os.ReadFile(path)
 	if err != nil {
 		return nil, err
 	}
@@ -102,7 +101,8 @@ func (h *Hostsfiles) monitorHostFiles(poll time.Duration) {
 	}
 
 	t := time.Duration(poll) * time.Second
-	for _ = range time.Tick(t) {
+	ticker := time.NewTicker(t)
+	for range ticker.C {
 		files, err := os.ReadDir(h.directory)
 		if err != nil {
 			log.Printf("E! %v", err)
@@ -120,7 +120,7 @@ func (h *Hostsfiles) monitorHostFiles(poll time.Duration) {
 					continue // no updates
 				}
 			}
-			//If any of the file change, reload them all
+			// If any of the file change, reload them all
 			log.Printf("Reloaded updated hostsfile, mtime:%s", mtime.Local().Format(time.RFC3339))
 			h.hostMutex.Lock()
 			h.reloadAll()

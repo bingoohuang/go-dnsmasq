@@ -16,9 +16,11 @@ import (
 	"strings"
 )
 
-const RESOLVCONF_COMMENT_ADD = "# added by go-dnsmasq"
-const RESOLVCONF_COMMENT_OUT = "# disabled by go-dnsmasq #"
-const RESOLVCONF_PATH = "/etc/resolv.conf"
+const (
+	RESOLVCONF_COMMENT_ADD = "# added by go-dnsmasq"
+	RESOLVCONF_COMMENT_OUT = "# disabled by go-dnsmasq #"
+	RESOLVCONF_PATH        = "/etc/resolv.conf"
+)
 
 var resolvConfPattern = regexp.MustCompile("(?m:^.*" + regexp.QuoteMeta(RESOLVCONF_COMMENT_ADD) + ")(?:$|\n)")
 
@@ -33,7 +35,7 @@ func Clean() {
 }
 
 func updateResolvConf(insert, path string) error {
-	f, err := os.OpenFile(path, os.O_RDWR|os.O_CREATE, 0666)
+	f, err := os.OpenFile(path, os.O_RDWR|os.O_CREATE, 0o666)
 	if err != nil {
 		return err
 	}
@@ -60,7 +62,7 @@ func updateResolvConf(insert, path string) error {
 		case "":
 			// uncomment lines we commented
 			if strings.Contains(line, RESOLVCONF_COMMENT_OUT) {
-				line = strings.Replace(line, RESOLVCONF_COMMENT_OUT, "", -1)
+				line = strings.ReplaceAll(line, RESOLVCONF_COMMENT_OUT, "")
 				line = strings.TrimLeft(line, " ")
 			}
 		default:

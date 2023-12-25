@@ -6,10 +6,9 @@ import (
 	"time"
 
 	"github.com/miekg/dns"
-	"github.com/stretchr/testify/assert"
-
 	"github.com/soulteary/go-dnsmasq/pkg/cache"
 	hosts "github.com/soulteary/go-dnsmasq/pkg/hostsfile"
+	"github.com/stretchr/testify/assert"
 )
 
 func TestPluggable(t *testing.T) {
@@ -25,8 +24,10 @@ func TestPluggable(t *testing.T) {
 			question: "tomoyamachi.com",
 			pluggable: func(m *dns.Msg, q dns.Question, targetName string, isTCP bool) (*dns.Msg, error) {
 				r := new(dns.A)
-				r.Hdr = dns.RR_Header{Name: q.Name, Rrtype: dns.TypeA,
-					Class: dns.ClassINET, Ttl: 10}
+				r.Hdr = dns.RR_Header{
+					Name: q.Name, Rrtype: dns.TypeA,
+					Class: dns.ClassINET, Ttl: 10,
+				}
 				r.A = net.ParseIP("1.1.1.1")
 				m.Answer = append(m.Answer, r)
 				return m, nil
@@ -69,5 +70,4 @@ func TestPluggable(t *testing.T) {
 		assert.Equal(t, m.Answer[0].String(), tc.wantAnswer, tc.name)
 
 	}
-
 }

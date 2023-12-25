@@ -27,11 +27,11 @@ type elem struct {
 // Cache is a cache that holds on the a number of RRs or DNS messages. The cache
 // eviction is randomized.
 type Cache struct {
-	sync.RWMutex
+	m map[string]*elem
 
 	capacity int
-	m        map[string]*elem
 	ttl      time.Duration
+	sync.RWMutex
 }
 
 // New returns a new cache with the capacity and the ttl specified.
@@ -59,7 +59,7 @@ func (c *Cache) EvictRandom() {
 		return
 	}
 	i := c.capacity - clen
-	for k, _ := range c.m {
+	for k := range c.m {
 		delete(c.m, k)
 		i--
 		if i == 0 {
@@ -78,7 +78,6 @@ func (c *Cache) InsertMessage(s string, msg *dns.Msg) {
 	c.Lock()
 	if _, ok := c.m[s]; !ok {
 		c.m[s] = &elem{time.Now().Add(c.ttl), msg.Copy()}
-
 	}
 	c.EvictRandom()
 	c.Unlock()
