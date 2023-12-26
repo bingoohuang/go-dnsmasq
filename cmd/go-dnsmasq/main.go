@@ -200,6 +200,10 @@ func Resolver(domainName string) ([]string, error) {
 	dnsServer := domainName[atPos+1:]
 	domainName = domainName[:atPos]
 
+	if _, port, _ := net.SplitHostPort(dnsServer); port == "" {
+		dnsServer += ":53"
+	}
+
 	r := &net.Resolver{
 		PreferGo: true,
 		Dial: func(ctx context.Context, network, address string) (net.Conn, error) {
