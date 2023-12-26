@@ -33,50 +33,65 @@ func main() {
 	app.Author, app.Email = "", ""
 	app.Flags = []cli.Flag{
 		cli.StringFlag{Name: "log-level", Value: "info", Usage: "log level", EnvVar: types.LogLevel},
-		cli.StringFlag{Name: "listen, l", Value: "127.0.0.1:53", EnvVar: types.Listen,
+		cli.StringFlag{
+			Name: "listen, l", Value: "127.0.0.1:53", EnvVar: types.Listen,
 			Usage: "Listen on this `address` <host[:port]>",
 		},
-		cli.BoolFlag{Name: "default-resolver, d", EnvVar: types.DefaultResolver,
+		cli.BoolFlag{
+			Name: "default-resolver, d", EnvVar: types.DefaultResolver,
 			Usage: "Update /etc/resolv.conf with the address of go-dnsmasq as nameserver",
 		},
-		cli.StringSliceFlag{Name: "nameservers, n", EnvVar: types.NameServers,
+		cli.StringSliceFlag{
+			Name: "nameservers, n", EnvVar: types.NameServers,
 			Usage: "Comma delimited list of `nameservers` <host[:port][,host[:port]]> (supersedes resolv.conf)",
 		},
-		cli.StringSliceFlag{Name: "stubzones, z", EnvVar: types.StubZone,
+		cli.StringSliceFlag{
+			Name: "stubzones, z", EnvVar: types.StubZone,
 			Usage: "Use different nameservers for given domains <domain[,domain]/host[:port][,host[:port]]>",
 		},
-		cli.StringFlag{Name: "hostsfile, f", EnvVar: types.HostsFile,
+		cli.StringFlag{
+			Name: "hostsfile, f", EnvVar: types.HostsFile,
 			Usage: "Path to a hosts `file` (e.g. /etc/hosts)",
 		},
-		cli.StringFlag{Name: "hostsfiles, fs", EnvVar: types.HostsDirectory,
+		cli.StringFlag{
+			Name: "hostsfiles, fs", EnvVar: types.HostsDirectory,
 			Usage: "Path to the `directory` of hosts file (e.g. /etc/host)",
 		},
-		cli.DurationFlag{Name: "hostsfile-poll, p", Value: 0, EnvVar: types.HostsFilePollDuration,
+		cli.DurationFlag{
+			Name: "hostsfile-poll, p", Value: 0, EnvVar: types.HostsFilePollDuration,
 			Usage: "How frequently to poll hosts file (`1s`, '0' to disable)",
 		},
-		cli.StringSliceFlag{Name: "search-domains, s", EnvVar: types.SearchDomains,
+		cli.StringSliceFlag{
+			Name: "search-domains, s", EnvVar: types.SearchDomains,
 			Usage: "List of search domains <domain[,domain]> (supersedes resolv.conf)",
 		},
-		cli.BoolFlag{Name: "enable-search, search", EnvVar: types.EnableSearch,
+		cli.BoolFlag{
+			Name: "enable-search, search", EnvVar: types.EnableSearch,
 			Usage: "Qualify names with search domains to resolve queries",
 		},
-		cli.IntFlag{Name: "rcache, r", Value: 0, EnvVar: types.ResponseCacheCap,
+		cli.IntFlag{
+			Name: "rcache, r", Value: 0, EnvVar: types.ResponseCacheCap,
 			Usage: "Response cache `capacity` ('0' disables caching)",
 		},
-		cli.DurationFlag{Name: "rcache-ttl", Value: time.Minute, EnvVar: types.ResponseCacheTTL,
+		cli.DurationFlag{
+			Name: "rcache-ttl", Value: time.Minute, EnvVar: types.ResponseCacheTTL,
 			Usage: "TTL for response cache entries",
 		},
 		cli.BoolFlag{Name: "no-rec", Usage: "Disable recursion", EnvVar: types.DisableRecursion},
-		cli.IntFlag{Name: "fwd-ndots", EnvVar: types.FwdNdots,
+		cli.IntFlag{
+			Name: "fwd-ndots", EnvVar: types.FwdNdots,
 			Usage: "Number of `dots` a name must have before the query is forwarded",
 		},
-		cli.IntFlag{Name: "ndots", Value: 1, EnvVar: types.Ndots,
+		cli.IntFlag{
+			Name: "ndots", Value: 1, EnvVar: types.Ndots,
 			Usage: "Number of `dots` a name must have before doing an initial absolute query (supersedes resolv.conf)",
 		},
-		cli.BoolFlag{Name: "round-robin", EnvVar: types.RoundRobin,
+		cli.BoolFlag{
+			Name: "round-robin", EnvVar: types.RoundRobin,
 			Usage: "Enable round robin of A/AAAA records",
 		},
-		cli.BoolFlag{Name: "systemd", EnvVar: types.Systemd,
+		cli.BoolFlag{
+			Name: "systemd", EnvVar: types.Systemd,
 			Usage: "Bind to socket activated by Systemd (supersedes '--listen')",
 		},
 		cli.BoolFlag{Name: "fg", Usage: "foreground", EnvVar: types.Foreground},
