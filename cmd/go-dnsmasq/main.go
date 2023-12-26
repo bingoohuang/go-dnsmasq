@@ -5,8 +5,10 @@
 package main
 
 import (
+	"context"
 	"fmt"
 	"log"
+	"net"
 	"os"
 	"strings"
 	"time"
@@ -54,6 +56,10 @@ func main() {
 			Usage: "Path to a hosts `file` (e.g. /etc/hosts)",
 		},
 		cli.StringFlag{
+			Name: "resolve", EnvVar: types.HostsFile,
+			Usage: "Resolve domain name by specified dns server (e.g. www.google.com@8.8.8.8:53)",
+		},
+		cli.StringFlag{
 			Name: "hostsfiles, fs", EnvVar: types.HostsDirectory,
 			Usage: "Path to the `directory` of hosts file (e.g. /etc/host)",
 		},
@@ -98,6 +104,16 @@ func main() {
 	}
 
 	app.Action = func(c *cli.Context) error {
+		if resolve := c.String("resolve"); resolve != "" {
+			ips, err := Resolver(resolve)
+			if err != nil {
+				return err
+			}
+
+			fmt.Printf("%v", ips)
+			return nil
+		}
+
 		log.Printf("Starting go-dnsmasq server %s", Version)
 
 		nameservers, err := server.CreateNameservers(c.StringSlice("nameservers"))
@@ -172,4 +188,27 @@ func main() {
 	if err := app.Run(os.Args); err != nil {
 		log.Fatal(err)
 	}
+}
+
+// Resolver 指定 dnsServer (例 "8.8.8.8:53")  解析 domainName (例 "www.google.com")
+func Resolver(domainName string) ([]string, error) {
+	atPos := strings.IndexByte(domainName, '@')
+	if atPos < 0 {
+		return net.LookupHost(domainName)
+	}
+
+	dnsServer := domainName[atPos+1:]
+	domainName = domainName[:atPos]
+
+	r := &net.Resolver{
+		PreferGo: true,
+		Dial: func(ctx context.Context, network, address string) (net.Conn, error) {
+			d := net.Dialer{
+				Timeout: time.Millisecond * time.Duration(10000),
+			}
+			return d.DialContext(ctx, network, dnsServer)
+		},
+	}
+	ip, err := r.LookupHost(context.Background(), domainName)
+	return ip, err
 }
