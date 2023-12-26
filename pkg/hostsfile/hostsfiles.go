@@ -17,7 +17,7 @@ type fileInfo struct {
 	size  int64
 }
 
-// Hostsfile represents a file containing hosts
+// Hostsfiles represents  files containing hosts
 type Hostsfiles struct {
 	config    *Config
 	hosts     *hostlist
@@ -56,7 +56,9 @@ func (h *Hostsfiles) reloadAll() error {
 		// Update main hostlist
 		if hosts != nil {
 			for _, host := range *hosts {
-				updateHostList.add(host)
+				if err := updateHostList.add(host); err != nil {
+					log.Printf("add host error: %v", err)
+				}
 			}
 		}
 		info, _ := file.Info()
@@ -96,10 +98,6 @@ func loadHostEntries(path string) (*hostlist, error) {
 }
 
 func (h *Hostsfiles) monitorHostFiles(poll time.Duration) {
-	if h.directory == "" {
-		return
-	}
-
 	t := time.Duration(poll) * time.Second
 	ticker := time.NewTicker(t)
 	for range ticker.C {
@@ -121,9 +119,11 @@ func (h *Hostsfiles) monitorHostFiles(poll time.Duration) {
 				}
 			}
 			// If any of the file change, reload them all
-			log.Printf("Reloaded updated hostsfile, mtime:%s", mtime.Local().Format(time.RFC3339))
+			log.Printf("Reloaded updated hostsfile, mtime: %s", mtime.Local().Format(time.RFC3339))
 			h.hostMutex.Lock()
-			h.reloadAll()
+			if err := h.reloadAll(); err != nil {
+				log.Printf("E! reloadAll error: %v", err)
+			}
 			h.hostMutex.Unlock()
 			break
 		}

@@ -47,6 +47,8 @@ type Config struct {
 	HostsTtl uint32 `json:"hostfile_ttl,omitempty"`
 	// bind to port(s) activated by systemd. If set to true, this overrides DnsAddr.
 	Systemd bool `json:"systemd,omitempty"`
+	// Daemon runs in daemonize mode.
+	Daemon bool `json:"daemon,omitempty"`
 	// Rewrite host's network config making go-dnsmasq the default resolver
 	DefaultResolver bool `json:"default_resolver,omitempty"`
 	// Replicates GNU libc's use of /etc/resolv.conf search domains
@@ -92,7 +94,7 @@ func CheckConfig(config *Config) error {
 		return fmt.Errorf("'listen' cannot be empty")
 	}
 	if !config.NoRec && len(config.Nameservers) == 0 {
-		return fmt.Errorf("Recursion is enabled but no nameservers are configured")
+		return fmt.Errorf("recursion is enabled but no nameservers are configured")
 	}
 
 	if config.EnableSearch && len(config.SearchDomains) == 0 {
@@ -120,7 +122,7 @@ func CheckConfig(config *Config) error {
 
 func appendDomain(s1, s2 string) string {
 	if len(s2) > 0 && strings.HasPrefix(s2, ".") {
-		strings.TrimLeft(s2, ".")
+		s2 = strings.TrimLeft(s2, ".")
 	}
 	return dns.Fqdn(s1) + dns.Fqdn(s2)
 }
@@ -132,7 +134,7 @@ func CreateListenAddress(listen string) (string, error) {
 		listen += ":53"
 	}
 	if err := validateHostPort(listen); err != nil {
-		return "", fmt.Errorf("Listen address: %s", err)
+		return "", fmt.Errorf("listen address: %s", err)
 	}
 	return listen, nil
 }
@@ -141,7 +143,7 @@ func CreateSearchDomains(domains []string) ([]string, error) {
 	searchDomains := []string{}
 	for _, domain := range domains {
 		if dns.CountLabel(domain) < 2 {
-			return nil, fmt.Errorf("Search domain must have at least one dot in name: %s", domain)
+			return nil, fmt.Errorf("search domain must have at least one dot in name: %s", domain)
 		}
 		domain = strings.TrimSpace(domain)
 		domain = dns.Fqdn(strings.ToLower(domain))
@@ -160,7 +162,7 @@ func CreateNameservers(servers []string) ([]string, error) {
 			hostPort += ":53"
 		}
 		if err := validateHostPort(hostPort); err != nil {
-			return nil, fmt.Errorf("Nameserver is invalid: %s", err)
+			return nil, fmt.Errorf("nameserver is invalid: %s", err)
 		}
 		nameservers = append(nameservers, hostPort)
 	}
@@ -175,7 +177,7 @@ func CreateStubMap(stubzones []string) (map[string][]string, error) {
 	for _, stubzone := range stubzones {
 		segments := strings.Split(stubzone, "/")
 		if len(segments) != 2 || len(segments[0]) == 0 || len(segments[1]) == 0 {
-			return nil, fmt.Errorf("Invalid value for --stubzones")
+			return nil, fmt.Errorf("invalid value for --stubzones")
 		}
 
 		hosts := strings.Split(segments[1], ",")
@@ -188,12 +190,12 @@ func CreateStubMap(stubzones []string) (map[string][]string, error) {
 			}
 
 			if err := validateHostPort(hostPort); err != nil {
-				return nil, fmt.Errorf("Stubzone Server address is invalid: %s", err)
+				return nil, fmt.Errorf("stubzone Server address is invalid: %s", err)
 			}
 
 			for _, sdomain := range strings.Split(segments[0], ",") {
 				if dns.CountLabel(sdomain) < 1 {
-					return nil, fmt.Errorf("Stubzone domain is not a fully-qualified domain name: %s", sdomain)
+					return nil, fmt.Errorf("stubzone domain is not a fully-qualified domain name: %s", sdomain)
 				}
 				sdomain = strings.TrimSpace(sdomain)
 				sdomain = dns.Fqdn(sdomain)
@@ -211,11 +213,11 @@ func validateHostPort(hostPort string) error {
 		return err
 	}
 	if ip := net.ParseIP(host); ip == nil {
-		return fmt.Errorf("Bad IP address: %s", host)
+		return fmt.Errorf("bad IP address: %s", host)
 	}
 
 	if p, _ := strconv.Atoi(port); p < 1 || p > 65535 {
-		return fmt.Errorf("Bad port number %s", port)
+		return fmt.Errorf("bad port number %s", port)
 	}
 	return nil
 }

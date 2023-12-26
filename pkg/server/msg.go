@@ -28,27 +28,27 @@ func Fit(m *dns.Msg, size int, tcp bool) (*dns.Msg, bool) {
 	}
 
 	// Additional section is gone, binary search until we have length that fits.
-	min, max := 0, len(m.Answer)
+	minVal, maxVal := 0, len(m.Answer)
 	original := make([]dns.RR, len(m.Answer))
 	copy(original, m.Answer)
 	for {
-		if min == max {
+		if minVal == maxVal {
 			break
 		}
 
-		mid := (min + max) / 2
+		mid := (minVal + maxVal) / 2
 		m.Answer = original[:mid]
 
 		if m.Len() < size {
-			min++
+			minVal++
 			continue
 		}
-		max = mid
+		maxVal = mid
 
 	}
-	if max > 1 {
-		max--
+	if maxVal > 1 {
+		maxVal--
 	}
-	m.Answer = m.Answer[:max]
+	m.Answer = m.Answer[:maxVal]
 	return m, true
 }

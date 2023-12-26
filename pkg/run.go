@@ -65,10 +65,10 @@ func BuildServer(sconf *server.Config, f *server.PluggableFunc, version string) 
 	if sconf.DirectoryHostsfiles != "" {
 		log.Printf("D! create server")
 		return server.New(hfs, sconf, version, f), nil
-	} else {
-		log.Printf("D! create server")
-		return server.New(hf, sconf, version, f), nil
 	}
+
+	log.Printf("D! create server")
+	return server.New(hf, sconf, version, f), nil
 }
 
 func Run(s *server.Server) error {

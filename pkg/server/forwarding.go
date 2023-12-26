@@ -243,9 +243,9 @@ func (s *Server) forwardQuery(req *dns.Msg, tcp bool) (*dns.Msg, error) {
 
 		switch tcp {
 		case false:
-			r, _, err = s.dnsUDPclient.Exchange(req, nservers[nsIdx])
+			r, _, err = s.dnsUDPClient.Exchange(req, nservers[nsIdx])
 		case true:
-			r, _, err = s.dnsTCPclient.Exchange(req, nservers[nsIdx])
+			r, _, err = s.dnsTCPClient.Exchange(req, nservers[nsIdx])
 		}
 
 		if err == nil {

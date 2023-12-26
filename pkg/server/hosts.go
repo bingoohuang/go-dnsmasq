@@ -13,16 +13,17 @@ func (s *Server) AddressRecords(q dns.Question, name string) (records []dns.RR, 
 	}
 
 	for _, ip := range results {
+		ip4 := ip.To4()
 		switch {
-		case ip.To4() != nil && (q.Qtype == dns.TypeA || q.Qtype == dns.TypeANY):
+		case ip4 != nil && (q.Qtype == dns.TypeA || q.Qtype == dns.TypeANY):
 			r := new(dns.A)
 			r.Hdr = dns.RR_Header{
 				Name: q.Name, Rrtype: dns.TypeA,
 				Class: dns.ClassINET, Ttl: s.config.HostsTtl,
 			}
-			r.A = ip.To4()
+			r.A = ip4
 			records = append(records, r)
-		case ip.To4() == nil && (q.Qtype == dns.TypeAAAA || q.Qtype == dns.TypeANY):
+		case ip4 == nil && (q.Qtype == dns.TypeAAAA || q.Qtype == dns.TypeANY):
 			r := new(dns.AAAA)
 			r.Hdr = dns.RR_Header{
 				Name: q.Name, Rrtype: dns.TypeAAAA,

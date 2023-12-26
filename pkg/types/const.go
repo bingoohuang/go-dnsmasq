@@ -18,4 +18,5 @@ const (
 	Ndots                 = "DNSMASQ_NDOTS"
 	RoundRobin            = "DNSMASQ_RR"
 	Systemd               = "DNSMASQ_SYSTEMD"
+	Foreground            = "DNSMASQ_FOREGROUND"
 )

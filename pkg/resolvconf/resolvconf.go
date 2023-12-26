@@ -78,7 +78,7 @@ func updateResolvConf(insert, path string) error {
 	}
 
 	// contents may have been shortened, so truncate where we are
-	pos, err := f.Seek(0, os.SEEK_CUR)
+	pos, err := f.Seek(0, io.SeekCurrent)
 	if err != nil {
 		return err
 	}

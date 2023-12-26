@@ -97,10 +97,6 @@ func (h *Hostsfile) loadHostEntries() error {
 
 func (h *Hostsfile) monitorHostEntries(t time.Duration) {
 	hf := h.file
-
-	if hf.path == "" {
-		return
-	}
 	ticker := time.NewTicker(t)
 
 	for range ticker.C {

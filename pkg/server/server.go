@@ -20,8 +20,8 @@ type (
 
 		pluggableFunc *PluggableFunc
 
-		dnsUDPclient *dns.Client // used for forwarding queries
-		dnsTCPclient *dns.Client // used for forwarding queries
+		dnsUDPClient *dns.Client // used for forwarding queries
+		dnsTCPClient *dns.Client // used for forwarding queries
 		rcache       *cache.Cache
 		version      string
 	}
@@ -35,12 +35,20 @@ type Hostfile interface {
 // New returns a new Server.
 func New(hostfile Hostfile, config *Config, v string, f *PluggableFunc) *Server {
 	return &Server{
-		hosts:         hostfile,
-		config:        config,
-		version:       v,
-		rcache:        cache.New(config.RCache, config.RCacheTtl),
-		dnsUDPclient:  &dns.Client{Net: "udp", ReadTimeout: 2 * config.ReadTimeout, WriteTimeout: 2 * config.ReadTimeout, SingleInflight: true},
-		dnsTCPclient:  &dns.Client{Net: "tcp", ReadTimeout: 2 * config.ReadTimeout, WriteTimeout: 2 * config.ReadTimeout, SingleInflight: true},
+		hosts:   hostfile,
+		config:  config,
+		version: v,
+		rcache:  cache.New(config.RCache, config.RCacheTtl),
+		dnsUDPClient: &dns.Client{
+			Net:          "udp",
+			ReadTimeout:  2 * config.ReadTimeout,
+			WriteTimeout: 2 * config.ReadTimeout,
+		},
+		dnsTCPClient: &dns.Client{
+			Net:          "tcp",
+			ReadTimeout:  2 * config.ReadTimeout,
+			WriteTimeout: 2 * config.ReadTimeout,
+		},
 		pluggableFunc: f,
 	}
 }
@@ -71,7 +79,9 @@ func (s *Server) dnsListenAndServerWithContext(ctx context.Context, addr, net st
 		go func() {
 			select {
 			case <-ctx.Done():
-				server.ShutdownContext(ctx)
+				if err := server.ShutdownContext(ctx); err != nil {
+					log.Printf("server ShutdownContext error: %v", err)
+				}
 			}
 		}()
 		if err := server.ListenAndServe(); err != nil {
@@ -91,7 +101,7 @@ func (s *Server) runSystemd(ctx context.Context, mux *dns.ServeMux) error {
 		return err
 	}
 	if len(packetConns) == 0 && len(listeners) == 0 {
-		return fmt.Errorf("No UDP or TCP sockets supplied by systemd")
+		return fmt.Errorf("no UDP or TCP sockets supplied by systemd")
 	}
 	eg, ctx := errgroup.WithContext(ctx)
 	for _, p := range packetConns {
@@ -117,7 +127,9 @@ func (s *Server) dnsActivateAndServeWithContext(ctx context.Context, l net.Liste
 		go func() {
 			select {
 			case <-ctx.Done():
-				server.ShutdownContext(ctx)
+				if err := server.ShutdownContext(ctx); err != nil {
+					log.Printf("server ShutdownContext error: %v", err)
+				}
 			}
 		}()
 		if err := server.ActivateAndServe(); err != nil {

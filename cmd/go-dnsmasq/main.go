@@ -8,8 +8,13 @@ import (
 	"fmt"
 	"log"
 	"os"
+	"strings"
 	"time"
 
+	"github.com/bingoohuang/gg/pkg/v"
+	"github.com/bingoohuang/godaemon"
+	"github.com/bingoohuang/rotatefile/homedir"
+	_ "github.com/bingoohuang/rotatefile/stdlog/autoload"
 	"github.com/soulteary/go-dnsmasq/pkg"
 	"github.com/soulteary/go-dnsmasq/pkg/resolvconf"
 	"github.com/soulteary/go-dnsmasq/pkg/server"
@@ -17,8 +22,7 @@ import (
 	"github.com/urfave/cli"
 )
 
-// set at build time
-var Version = "dev"
+var Version = strings.ReplaceAll(v.Version(), "\n", " ")
 
 func main() {
 	app := cli.NewApp()
@@ -28,98 +32,54 @@ func main() {
 	app.Version = Version
 	app.Author, app.Email = "", ""
 	app.Flags = []cli.Flag{
-		cli.StringFlag{
-			Name:   "log-level",
-			Value:  "info",
-			Usage:  "log level",
-			EnvVar: types.LogLevel, // deprecated DNSMASQ_SEARCH
+		cli.StringFlag{Name: "log-level", Value: "info", Usage: "log level", EnvVar: types.LogLevel},
+		cli.StringFlag{Name: "listen, l", Value: "127.0.0.1:53", EnvVar: types.Listen,
+			Usage: "Listen on this `address` <host[:port]>",
 		},
-		cli.StringFlag{
-			Name:   "listen, l",
-			Value:  "127.0.0.1:53",
-			Usage:  "Listen on this `address` <host[:port]>",
-			EnvVar: types.Listen,
+		cli.BoolFlag{Name: "default-resolver, d", EnvVar: types.DefaultResolver,
+			Usage: "Update /etc/resolv.conf with the address of go-dnsmasq as nameserver",
 		},
-		cli.BoolFlag{
-			Name:   "default-resolver, d",
-			Usage:  "Update /etc/resolv.conf with the address of go-dnsmasq as nameserver",
-			EnvVar: types.DefaultResolver,
+		cli.StringSliceFlag{Name: "nameservers, n", EnvVar: types.NameServers,
+			Usage: "Comma delimited list of `nameservers` <host[:port][,host[:port]]> (supersedes resolv.conf)",
 		},
-		cli.StringSliceFlag{
-			Name:   "nameservers, n",
-			Usage:  "Comma delimited list of `nameservers` <host[:port][,host[:port]]> (supersedes resolv.conf)",
-			EnvVar: types.NameServers,
+		cli.StringSliceFlag{Name: "stubzones, z", EnvVar: types.StubZone,
+			Usage: "Use different nameservers for given domains <domain[,domain]/host[:port][,host[:port]]>",
 		},
-		cli.StringSliceFlag{
-			Name:   "stubzones, z",
-			Usage:  "Use different nameservers for given domains <domain[,domain]/host[:port][,host[:port]]>",
-			EnvVar: types.StubZone,
+		cli.StringFlag{Name: "hostsfile, f", EnvVar: types.HostsFile,
+			Usage: "Path to a hosts `file` (e.g. /etc/hosts)",
 		},
-		cli.StringFlag{
-			Name:   "hostsfile, f",
-			Usage:  "Path to a hosts `file` (e.g. /etc/hosts)",
-			EnvVar: types.HostsFile,
+		cli.StringFlag{Name: "hostsfiles, fs", EnvVar: types.HostsDirectory,
+			Usage: "Path to the `directory` of hosts file (e.g. /etc/host)",
 		},
-		cli.StringFlag{
-			Name:   "hostsfiles, fs",
-			Value:  "",
-			Usage:  "Path to the `directory` of hosts file (e.g. /etc/host)",
-			EnvVar: types.HostsDirectory,
+		cli.DurationFlag{Name: "hostsfile-poll, p", Value: 0, EnvVar: types.HostsFilePollDuration,
+			Usage: "How frequently to poll hosts file (`1s`, '0' to disable)",
 		},
-		cli.DurationFlag{
-			Name:   "hostsfile-poll, p",
-			Value:  0,
-			Usage:  "How frequently to poll hosts file (`1s`, '0' to disable)",
-			EnvVar: types.HostsFilePollDuration,
+		cli.StringSliceFlag{Name: "search-domains, s", EnvVar: types.SearchDomains,
+			Usage: "List of search domains <domain[,domain]> (supersedes resolv.conf)",
 		},
-		cli.StringSliceFlag{
-			Name:   "search-domains, s",
-			Usage:  "List of search domains <domain[,domain]> (supersedes resolv.conf)",
-			EnvVar: types.SearchDomains,
+		cli.BoolFlag{Name: "enable-search, search", EnvVar: types.EnableSearch,
+			Usage: "Qualify names with search domains to resolve queries",
 		},
-		cli.BoolFlag{
-			Name:   "enable-search, search",
-			Usage:  "Qualify names with search domains to resolve queries",
-			EnvVar: types.EnableSearch,
+		cli.IntFlag{Name: "rcache, r", Value: 0, EnvVar: types.ResponseCacheCap,
+			Usage: "Response cache `capacity` ('0' disables caching)",
 		},
-		cli.IntFlag{
-			Name:   "rcache, r",
-			Value:  0,
-			Usage:  "Response cache `capacity` ('0' disables caching)",
-			EnvVar: types.ResponseCacheCap,
+		cli.DurationFlag{Name: "rcache-ttl", Value: time.Minute, EnvVar: types.ResponseCacheTTL,
+			Usage: "TTL for response cache entries",
 		},
-		cli.DurationFlag{
-			Name:   "rcache-ttl",
-			Value:  time.Minute,
-			Usage:  "TTL for response cache entries",
-			EnvVar: types.ResponseCacheTTL,
+		cli.BoolFlag{Name: "no-rec", Usage: "Disable recursion", EnvVar: types.DisableRecursion},
+		cli.IntFlag{Name: "fwd-ndots", EnvVar: types.FwdNdots,
+			Usage: "Number of `dots` a name must have before the query is forwarded",
 		},
-		cli.BoolFlag{
-			Name:   "no-rec",
-			Usage:  "Disable recursion",
-			EnvVar: types.DisableRecursion,
+		cli.IntFlag{Name: "ndots", Value: 1, EnvVar: types.Ndots,
+			Usage: "Number of `dots` a name must have before doing an initial absolute query (supersedes resolv.conf)",
 		},
-		cli.IntFlag{
-			Name:   "fwd-ndots",
-			Usage:  "Number of `dots` a name must have before the query is forwarded",
-			EnvVar: types.FwdNdots,
+		cli.BoolFlag{Name: "round-robin", EnvVar: types.RoundRobin,
+			Usage: "Enable round robin of A/AAAA records",
 		},
-		cli.IntFlag{
-			Name:   "ndots",
-			Value:  1,
-			Usage:  "Number of `dots` a name must have before doing an initial absolute query (supersedes resolv.conf)",
-			EnvVar: types.Ndots,
+		cli.BoolFlag{Name: "systemd", EnvVar: types.Systemd,
+			Usage: "Bind to socket activated by Systemd (supersedes '--listen')",
 		},
-		cli.BoolFlag{
-			Name:   "round-robin",
-			Usage:  "Enable round robin of A/AAAA records",
-			EnvVar: types.RoundRobin,
-		},
-		cli.BoolFlag{
-			Name:   "systemd",
-			Usage:  "Bind to socket activated by Systemd (supersedes '--listen')",
-			EnvVar: types.Systemd,
-		},
+		cli.BoolFlag{Name: "fg", Usage: "foreground", EnvVar: types.Foreground},
 	}
 
 	app.Action = func(c *cli.Context) error {
@@ -150,6 +110,7 @@ func main() {
 			DefaultResolver:     c.Bool("default-resolver"),
 			Nameservers:         nameservers,
 			Systemd:             c.Bool("systemd"),
+			Daemon:              !c.Bool("fg"),
 			SearchDomains:       searchDomains,
 			EnableSearch:        c.Bool("enable-search"),
 			Hostsfile:           c.String("hostsfile"),
@@ -166,6 +127,14 @@ func main() {
 			Stub:                stubmap,
 		}
 
+		if config.Hostsfile == "" {
+			if hosts, _ := homedir.Expand("~/.hosts"); hosts != "" {
+				if stat, err := os.Stat(hosts); err == nil && !stat.IsDir() {
+					config.Hostsfile = hosts
+				}
+			}
+		}
+
 		resolvconf.Clean()
 		if err := server.ResolvConf(config, c.IsSet("ndots")); err != nil {
 			if !os.IsNotExist(err) {
@@ -177,6 +146,11 @@ func main() {
 		if err != nil {
 			return err
 		}
+
+		if config.Daemon {
+			godaemon.Daemonize()
+		}
+
 		return pkg.Run(s)
 	}
 
